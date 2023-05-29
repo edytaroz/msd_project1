@@ -1,3 +1,15 @@
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtils;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+
+
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -5,17 +17,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileOutputStream;
 
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.io.IOException;
 import java.util.HashMap;
 
+
 public class GUI extends JPanel implements ActionListener, ChangeListener {
+    private DefaultCategoryDataset chartDataset;
+    private Workbook workbook;
+    private Sheet excelSheet;
+
     private static final long serialVersionUID = 1L;
     private Timer timer;
     private Board board;
@@ -34,6 +47,13 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
         frame = jf;
         timer = new Timer(initDelay, this);
         timer.stop();
+
+        // Inicjalizacja datasetu dla wykresu
+        chartDataset = new DefaultCategoryDataset();
+
+        // Inicjalizacja arkusza w pliku Excel
+        workbook = new XSSFWorkbook();
+        excelSheet = workbook.createSheet("Death Count");
     }
 
     public void initialize(Container container) {
@@ -105,51 +125,73 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
                 timer.stop();
                 start.setEnabled(true);
                 board.clear();
-
-                HashMap<Integer, Integer> map = board.map;
-                createDeathCountExcel(map);
-
+                createDeathCountExcel(board.map);
             }
         }
     }
+
 
     public void stateChanged(ChangeEvent e) {
         timer.setDelay(maxDelay - pred.getValue());
     }
 
     public void createDeathCountExcel(HashMap<Integer, Integer> deathCountMap) {
-        // Workbook workbook = new XSSFWorkbook();
-        // Sheet sheet = workbook.createSheet("Death Count");
+        // Wyczyszczenie aktualnych danych w chartDataset
+        chartDataset.clear();
 
-        // // Nagłówki kolumn
-        // Row headerRow = sheet.createRow(0);
-        // headerRow.createCell(0).setCellValue("Iteration");
-        // headerRow.createCell(1).setCellValue("Death Count");
+        // Aktualizacja danych w chartDataset
+        for (Integer key : deathCountMap.keySet()) {
+            chartDataset.addValue(deathCountMap.get(key), "Death Count", String.valueOf(key));
+        }
 
-        // // Dane
-        // int rowNum = 1;
-        // for (Map.Entry<Integer, Integer> entry : deathCountMap.entrySet()) {
-        //     Row row = sheet.createRow(rowNum++);
-        //     row.createCell(0).setCellValue(entry.getKey());
-        //     row.createCell(1).setCellValue(entry.getValue());
-        // }
+        // Generowanie wykresu słupkowego
+        JFreeChart barChart = ChartFactory.createBarChart(
+                "Death Count", "Iteration", "Death Count",
+                chartDataset, PlotOrientation.VERTICAL, true, true, false);
 
-        // // Zapis do pliku
-        // try (FileOutputStream fileOut = new FileOutputStream("death_count.xlsx")) {
-        //     workbook.write(fileOut);
-        //     System.out.println("Plik Excel został pomyślnie zapisany.");
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
+        // Konwersja wykresu na obrazek
+        byte[] chartImageBytes;
+        try {
+            chartImageBytes = ChartUtils.encodeAsPNG(barChart.createBufferedImage(800, 600));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
 
-        // // Zamknięcie workbooka
-        // try {
-        //     workbook.close();
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
-        for (Integer key: deathCountMap.keySet()){
-            System.out.println("Literacja: " + key +"\nLiczba zgonów: "+deathCountMap.get(key) + "\n");
+        // Dodawanie obrazka wykresu do panelu
+        ImageIcon chartImageIcon = new ImageIcon(chartImageBytes);
+        JLabel chartLabel = new JLabel(chartImageIcon);
+        ChartPanel chartPanel = new ChartPanel(barChart);
+        chartPanel.setPreferredSize(new Dimension(800, 600));
+        chartPanel.setDomainZoomable(false);
+        chartPanel.setRangeZoomable(false);
+
+        // Tworzenie ramki i dodawanie panelu z wykresem
+        JFrame chartFrame = new JFrame("Death Count Chart");
+        chartFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        chartFrame.getContentPane().add(chartPanel, BorderLayout.CENTER);
+        chartFrame.pack();
+        chartFrame.setVisible(true);
+
+
+        // Zapisywanie danych do arkusza Excel
+        int rowNum = 0;
+        for (Integer key : deathCountMap.keySet()) {
+            Row row = excelSheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(key);
+            row.createCell(1).setCellValue(deathCountMap.get(key));
+        }
+
+        // Zapis do pliku Excel
+        try (FileOutputStream fileOut = new FileOutputStream("death_count.xlsx")) {
+            workbook.write(fileOut);
+            System.out.println("Plik Excel został pomyślnie zapisany.");
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
+
+
+
+
+
 }
