@@ -19,8 +19,10 @@ public class Point{
     private int iterationInt;
     private static int peopleConst = 2; // 10 / (10 - 8)
     public boolean isAlive;
-    private static float smokePoisoningVal = 0.3f;
+    private static float burningVal = 0.3f;
+    private static float smokePoisoningVal = 3f;
     public int timeOfDeath;
+    public double ingestedSmoke;
 
     public Point(int x,int y) {
         type=0;
@@ -31,6 +33,7 @@ public class Point{
         iterationInt = 0;
         isAlive = true;
         timeOfDeath = -1;
+        ingestedSmoke = 0;
     }
 
     public void clear() {
@@ -39,6 +42,7 @@ public class Point{
         smokeDensity = 0;
         isAlive = true;
         timeOfDeath = -1;
+        ingestedSmoke = 0;
     }
 
     public boolean calcStaticField() {
@@ -60,6 +64,7 @@ public class Point{
             checkAliveStatus();
         }
         if (isPedestrian && !blocked && isAlive && ((iterationInt % peopleConst != 0 && smokeDensity < 0.71) || (iterationInt % peopleConst == 0 && smokeDensity >= 0.71))){
+            ingestedSmoke += smokeDensity;
             Random random = new Random();
             Point nextP = this;
             ArrayList<Point> nextPos = new ArrayList<Point>();
@@ -77,8 +82,10 @@ public class Point{
                     if (nextP.type != 2) {
                         nextP.isPedestrian = true;
                         nextP.blocked = true;
+                        nextP.ingestedSmoke = ingestedSmoke;
                     }
                     this.isPedestrian = false;
+                    this.ingestedSmoke = 0;
                 }
             }
             else if (nextP == this){ //trying random choose
@@ -90,8 +97,10 @@ public class Point{
                     if (nextP.type != 2){
                         nextP.isPedestrian = true;
                         nextP.blocked = true;
+                        nextP.ingestedSmoke = ingestedSmoke;
                     }
                     this.isPedestrian = false;
+                    this.ingestedSmoke = 0;
                 }
             }
         }
@@ -113,7 +122,7 @@ public class Point{
     }
 
     private void checkAliveStatus(){
-        if(isAlive && smokeDensity >= smokePoisoningVal){
+        if(isAlive && (smokeDensity >= burningVal || ingestedSmoke >= smokePoisoningVal)){
             isAlive = false;
             timeOfDeath = iterationInt;
         }
@@ -122,6 +131,7 @@ public class Point{
         isAlive = true;
         isPedestrian = false;
         type = 0;
+        ingestedSmoke = 0;
         return timeOfDeath;
     }
 
