@@ -189,9 +189,4 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
             ex.printStackTrace();
         }
     }
-
-
-
-
-
 }

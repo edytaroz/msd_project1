@@ -11,21 +11,39 @@ import java.util.Random;
 import javax.swing.JComponent;
 import javax.swing.event.MouseInputListener;
 
+import static java.lang.Math.*;
+
 public class Board extends JComponent implements MouseInputListener, ComponentListener {
+
     private static final long serialVersionUID = 1L;
     private Point[][] pointer;
+
     private int size = 10;
+
     public int editType=0;
+
     private String version = "moore";
+
     private int repulsionRadius;
+
+
     private static final int SFMAX = 100000;
-    private int iterationInt;
-    private static int fireConst = 4; //~ 10 / (10 - 4)
-    private int roomSize;
-    private int doorsNumber = 3;
+
     private int numOfDead;
+
+    private int iterationInt;
+
+    private static int fireConst = 6; //~ 10 / (10 - 4)
+
+    private int roomSize;
+
+    private int doorsNumber = 3;
+
     public HashMap<Integer,Integer> map = new HashMap<>();
-    private int peopleCount = 400;
+
+    private int peopleCount = 500;
+
+    private Point fire;
 
     public Board(int length, int height) {
         addMouseListener(this);
@@ -33,9 +51,9 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
         addMouseMotionListener(this);
         setBackground(Color.WHITE);
         setOpaque(true);
-        roomSize = Math.min(length,height)/5;
+        roomSize = 30;
         initialize(length, height,roomSize);
-        repulsionRadius = (int) (0.06*Math.min(length,height));
+        repulsionRadius = (int) (0.06* min(length,height));
         iterationInt = 0;
         numOfDead = 0;
     }
@@ -90,46 +108,91 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
         int centerX = length/2;
         int centerY = height/2;
         ArrayList<Point> innerPoints = new ArrayList<Point>();
-
-        for (int x = 0; x < pointer.length; ++x){
-            for (int y = 0; y < pointer[x].length; ++y){
-                pointer[x][y] = new Point(x,y);
+        if(distanceFromCenter%2 == 0) {
+            distanceFromCenter /= 2;
+            for (int x = 0; x < pointer.length; ++x) {
+                for (int y = 0; y < pointer[x].length; ++y) {
+                    pointer[x][y] = new Point(x, y);
+                }
             }
-        }
-        // Dodanie punktów tworzących kwadrat w kolejności
-        // od lewej do prawej, od góry do dołu.
-        for (int y = centerY - distanceFromCenter; y <= centerY + distanceFromCenter; y++) {
-            int x = centerX + distanceFromCenter;
-            pointer[x][y].type = 1;
-            pointer[x][y].staticField = 1000000;
-            walls.add(pointer[x][y]);
-        }
-
-        for (int x = centerX + distanceFromCenter-1; x >= centerX - distanceFromCenter; x--) {
-            int y = centerY + distanceFromCenter;
-            pointer[x][y].type = 1;
-            pointer[x][y].staticField = 1000000;
-            walls.add(pointer[x][y]);
-        }
-
-        for (int y = centerY + distanceFromCenter-1; y >= centerY - distanceFromCenter; y--) {
-            int x = centerX - distanceFromCenter;
-            pointer[x][y].type = 1;
-            pointer[x][y].staticField = 1000000;
-            walls.add(pointer[x][y]);
-        }
-
-        for (int x = centerX - distanceFromCenter + 1; x < centerX + distanceFromCenter; x++) {
-            int y = centerY - distanceFromCenter;
-            pointer[x][y].type = 1;
-            pointer[x][y].staticField = 1000000;
-            walls.add(pointer[x][y]);
-        }
-
-        for (int y = centerY - distanceFromCenter + 1; y < centerY + distanceFromCenter; y++) {
-            for (int x = centerX - distanceFromCenter + 1; x < centerX + distanceFromCenter; x++) {
-                innerPoints.add(pointer[x][y]);
+            // Dodanie punktów tworzących kwadrat w kolejności
+            // od lewej do prawej, od góry do dołu.
+            for (int y = centerY - distanceFromCenter; y < centerY + distanceFromCenter - 1; y++) {
+                int x = centerX + distanceFromCenter - 1;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
             }
+
+            for (int x = centerX + distanceFromCenter - 1; x > centerX - distanceFromCenter; x--) {
+                int y = centerY + distanceFromCenter - 1;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int y = centerY + distanceFromCenter - 1; y > centerY - distanceFromCenter; y--) {
+                int x = centerX - distanceFromCenter;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int x = centerX - distanceFromCenter; x < centerX + distanceFromCenter; x++) {
+                int y = centerY - distanceFromCenter;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int y = centerY - distanceFromCenter + 1; y < centerY + distanceFromCenter - 1; y++) {
+                for (int x = centerX - distanceFromCenter + 1 ; x < centerX + distanceFromCenter - 1; x++) {
+                    innerPoints.add(pointer[x][y]);
+                }
+            }
+        }else{
+            distanceFromCenter /= 2;
+            for (int x = 0; x < pointer.length; ++x) {
+                for (int y = 0; y < pointer[x].length; ++y) {
+                    pointer[x][y] = new Point(x, y);
+                }
+            }
+            // Dodanie punktów tworzących kwadrat w kolejności
+            // od lewej do prawej, od góry do dołu.
+            for (int y = centerY - distanceFromCenter; y <= centerY + distanceFromCenter - 1; y++) {
+                int x = centerX + distanceFromCenter;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int x = centerX + distanceFromCenter; x > centerX - distanceFromCenter; x--) {
+                int y = centerY + distanceFromCenter;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int y = centerY + distanceFromCenter; y > centerY - distanceFromCenter; y--) {
+                int x = centerX - distanceFromCenter;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int x = centerX - distanceFromCenter; x <= centerX + distanceFromCenter; x++) {
+                int y = centerY - distanceFromCenter;
+                pointer[x][y].type = 1;
+                pointer[x][y].staticField = 1000000;
+                walls.add(pointer[x][y]);
+            }
+
+            for (int y = centerY - distanceFromCenter; y < centerY + distanceFromCenter; y++) {
+                for (int x = centerX - distanceFromCenter; x < centerX + distanceFromCenter; x++) {
+                    innerPoints.add(pointer[x][y]);
+                }
+            }
+
         }
         Random random = new Random();
         if (peopleCount > innerPoints.size()) {
@@ -138,11 +201,14 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
 
         int randomIndex = random.nextInt(innerPoints.size());
         innerPoints.get(randomIndex).type = 4;
+        this.fire = innerPoints.get(randomIndex);
         innerPoints.remove(randomIndex);
 
         for(int i = 0; i < this.peopleCount;i++){
             randomIndex = random.nextInt(innerPoints.size());
             innerPoints.get(randomIndex).isPedestrian = true;
+            innerPoints.get(randomIndex).setAge(random.nextInt(95) + 4); // Przykładowa losowa wartość wieku (4-99)
+            innerPoints.get(randomIndex).checkMove();
             innerPoints.remove(randomIndex);
         }
 
@@ -167,9 +233,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
         }
 
         int len_walls = walls.size();
-        System.out.println(len_walls);
         int space = len_walls / (doorsNumber);
-        System.out.println(space);
         int i = 0;
         int cur_doors = 0;
         while(cur_doors != doorsNumber) {
@@ -192,7 +256,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
                 for (int j = y_c - repulsionRadius; j <= y_c + repulsionRadius; j++) {
                     if (i >= 0 && i < pointer.length && j >= 0 && j < pointer[i].length) {
                         if (pointer[i][j].type != 1 && pointer[i][j].type != 2) { // if pedestrian
-                            double distance = Math.sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
+                            double distance = sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
                             if (distance < repulsionRadius && distance != 0) {
                                 double repulsion = 0.7 / distance;
                                 pointer[i][j].staticField = pointer[i][j].staticField + repulsion;
@@ -220,9 +284,9 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
                             for (int j = y_c - repulsionRadius; j <= y_c + repulsionRadius; j++) {
                                 if (i >= 0 && i < pointer.length && j >= 0 && j < pointer[i].length) {
                                     if (pointer[i][j].type != 1 && pointer[i][j].type != 2) { // if pedestrian
-                                        double distance = Math.sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
+                                        double distance = sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
                                         if (distance < repulsionRadius && distance != 0) {
-                                            double repulsion = 0.5 / distance;
+                                            double repulsion = 0.05 / distance;
                                             pointer[i][j].staticField = pointer[i][j].staticField-repulsion;
                                         }
                                     }
@@ -260,7 +324,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
         int firstY = insets.top;
         int lastX = this.getWidth() - insets.right;
         int lastY = this.getHeight() - insets.bottom;
-
+        float colorIntensity = iterationInt/10 + 1;
         int x = firstX;
         while (x < lastX) {
             g.drawLine(x, firstY, x, lastY);
@@ -299,7 +363,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
                     g.setColor(new Color(0.0f, 1.0f, 0.0f, 0.7f));
                 }
                 if (pointer[x][y].isPedestrian){
-                    g.setColor(new Color(0.0f, 0.0f, 1.0f, 0.7f));
+                    g.setColor(new Color(0.2f, 0.5f,min(8.0f,max(0.0f,1.0f - (colorIntensity+1)/(float)sqrt((x - this.fire.x) * (x - this.fire.x) + (y - this.fire.y) * (y - this.fire.y)))),1.0f));
                 }
                 if (pointer[x][y].type == 4){
                     g.setColor(new Color(1f, 0.0f, 0.0f, 0.7f));
@@ -336,7 +400,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
     public void componentResized(ComponentEvent e) {
         int dlugosc = (this.getWidth() / size) + 1;
         int wysokosc = (this.getHeight() / size) + 1;
-        int room = (this.roomSize/size) + 1;
+        int room = this.roomSize;
         initialize(dlugosc, wysokosc,room);
     }
 
@@ -368,9 +432,9 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
             for (int j = y_c - repulsionRadius; j <= y_c + repulsionRadius; j++) {
                 if (i >= 0 && i < pointer.length && j >= 0 && j < pointer[i].length) {
                     if (pointer[i][j].type != 1 && pointer[i][j].type != 2) { // if pedestrian
-                        double distance = Math.sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
+                        double distance = sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
                         if (distance < repulsionRadius && distance!= 0) {
-                            double repulsion = 0.02 / distance;
+                            double repulsion = 0.07 / distance;
                             pointer[i][j].smokeDensity += repulsion;
                         }
                     }
@@ -388,7 +452,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
             for (int j = y_c - repulsionRadius; j <= y_c + repulsionRadius; j++) {
                 if (i >= 0 && i < pointer.length && j >= 0 && j < pointer[i].length) {
                     if (pointer[i][j].type != 1 && pointer[i][j].type != 2) { // if pedestrian
-                        double distance = Math.sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
+                        double distance = sqrt((i - x_c) * (i - x_c) + (j - y_c) * (j - y_c));
                         if (distance < repulsionRadius) {
                             pointer[i][j].smokeDensity = 0;
                         }
