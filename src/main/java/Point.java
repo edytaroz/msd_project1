@@ -22,11 +22,12 @@ public class Point{
     private static int peopleConst = 2; // 10 / (10 - 8)
     public boolean isAlive;
     private static float burningVal = 0.3f;
-    private static float smokePoisoningVal = 3f;
+    private static float smokePoisoningVal = 5f;
     public int timeOfDeath;
     public double ingestedSmoke;
 
     private int waitToMove = 0;
+    public boolean isNextToWall = false;
 
     public Point(int x,int y) {
         type=0;
@@ -67,7 +68,10 @@ public class Point{
         if(isPedestrian){
             checkAliveStatus();
         }
-        if (isPedestrian && !blocked && isAlive && ((iterationInt % peopleConst != 0 && smokeDensity < 0.71) || (iterationInt % peopleConst == 0 && smokeDensity >= 0.71))) {
+        if(!blocked){
+            iterationInt++;
+        }
+        if (isPedestrian && !blocked && isAlive && ((iterationInt % peopleConst != 0 && smokeDensity < 0.71) || (iterationInt % peopleConst == 0 && smokeDensity >= 0.71 && !isNextToWall) || (iterationInt % peopleConst != 0 && smokeDensity >= 0.71 && isNextToWall))) {
             if (checkMove() == 1) {
                 ingestedSmoke += smokeDensity;
                 Random random = new Random();
@@ -118,7 +122,6 @@ public class Point{
                 }
             }
         }
-        iterationInt++;
         return 0;
 
     }

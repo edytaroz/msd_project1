@@ -273,6 +273,9 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
         ArrayList<Point> toCheck = new ArrayList<Point>();
         for (int x = 1; x < pointer.length-1; ++x) {
             for (int y = 1; y < pointer[x].length-1; ++y) {
+                if(pointer[x-1][y].type == 1 || pointer[x+1][y].type == 1 || pointer[x][y-1].type == 1 || pointer[x][y+1].type == 1){
+                    pointer[x][y].isNextToWall = true;
+                }
                 if(pointer[x][y].type == 2){
                     pointer[x][y].staticField = 0;
                     toCheck.addAll(pointer[x][y].neighbors);
