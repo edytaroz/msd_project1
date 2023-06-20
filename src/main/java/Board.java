@@ -29,7 +29,12 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
 
     private static final int SFMAX = 100000;
 
-    private int numOfDead;
+    public int numOfDead;
+    public int numOldYoungDead = 0;
+    public float numChildDead = 0;
+    public float numAdolescentDead = 0;
+    public float numAdultDead = 0;
+    public float numSeniorsDead = 0;
 
     private int iterationInt;
 
@@ -37,7 +42,7 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
 
     private int roomSize;
 
-    private int doorsNumber = 3;
+    private int doorsNumber = 6;
 
     public HashMap<Integer,Integer> map = new HashMap<>();
 
@@ -80,6 +85,21 @@ public class Board extends JComponent implements MouseInputListener, ComponentLi
                 }
                 if(!pointer[x][y].isAlive){
                     numOfDead += 1;
+                    if(pointer[x][y].isOldOrYoungDead){
+                        numOldYoungDead += 1;
+                    }
+                    if(pointer[x][y].getAge() < 11){
+                        numChildDead += 1;
+                    }
+                    else if(pointer[x][y].getAge() <= 18){
+                        numAdolescentDead += 1;
+                    }
+                    else if(pointer[x][y].getAge() <= 70){
+                        numAdultDead += 1;
+                    }
+                    else{
+                        numSeniorsDead += 1;
+                    }
                     timeOfDeath = pointer[x][y].undead();
                     if(map.containsKey(timeOfDeath)){
                         map.put(timeOfDeath, map.get(timeOfDeath) + 1);

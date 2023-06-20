@@ -22,12 +22,13 @@ public class Point{
     private static int peopleConst = 2; // 10 / (10 - 8)
     public boolean isAlive;
     private static float burningVal = 0.3f;
-    private static float smokePoisoningVal = 5f;
+    private static float smokePoisoningVal = 10f;
     public int timeOfDeath;
     public double ingestedSmoke;
 
     private int waitToMove = 0;
     public boolean isNextToWall = false;
+    public boolean isOldOrYoungDead = false;
 
     public Point(int x,int y) {
         type=0;
@@ -142,6 +143,9 @@ public class Point{
         if(isAlive && (smokeDensity >= burningVal || ingestedSmoke >= smokePoisoningVal)){
             isAlive = false;
             timeOfDeath = iterationInt;
+            if(age < 11 || age > 70){
+                isOldOrYoungDead = true;
+            }
         }
     }
 
@@ -189,6 +193,7 @@ public class Point{
         type = 0;
         ingestedSmoke = 0;
         age = 0;
+        isOldOrYoungDead = false;
         return timeOfDeath;
     }
 

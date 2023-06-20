@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 public class GUI extends JPanel implements ActionListener, ChangeListener {
     private DefaultCategoryDataset chartDataset;
+    private DefaultCategoryDataset chartDataset2;
     private Workbook workbook;
     private Sheet excelSheet;
 
@@ -50,6 +51,7 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
 
         // Inicjalizacja datasetu dla wykresu
         chartDataset = new DefaultCategoryDataset();
+        chartDataset2 = new DefaultCategoryDataset();
 
         // Inicjalizacja arkusza w pliku Excel
         workbook = new XSSFWorkbook();
@@ -126,6 +128,9 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
                 start.setEnabled(true);
                 board.clear();
                 createDeathCountExcel(board.map);
+                createAgeChart();
+                System.out.println(board.numOfDead);
+                System.out.println(board.numOldYoungDead);
             }
         }
     }
@@ -133,6 +138,47 @@ public class GUI extends JPanel implements ActionListener, ChangeListener {
 
     public void stateChanged(ChangeEvent e) {
         timer.setDelay(maxDelay - pred.getValue());
+    }
+    public void createAgeChart(){
+        // Wyczyszczenie aktualnych danych w chartDataset
+        chartDataset2.clear();
+        float val1 = board.numChildDead / board.numOfDead;
+        float val2 = board.numAdolescentDead / board.numOfDead;
+        float val3 = board.numAdultDead / board.numOfDead;
+        float val4 = board.numSeniorsDead / board.numOfDead;
+        // Aktualizacja danych w chartDataset
+        chartDataset2.addValue(val1, "Death Percentage", "Under 11");
+        chartDataset2.addValue(val2, "Death Percentage", "11 to 18");
+        chartDataset2.addValue(val3, "Death Percentage", "19 to 70");
+        chartDataset2.addValue(val4, "Death Percentage", "Over 70");
+
+        // Generowanie wykresu słupkowego
+        JFreeChart barChart = ChartFactory.createBarChart(
+                "Death Percentage", "Age group", "Death Percentage",
+                chartDataset2, PlotOrientation.VERTICAL, true, true, false);
+
+        // Konwersja wykresu na obrazek
+        byte[] chartImageBytes;
+        try {
+            chartImageBytes = ChartUtils.encodeAsPNG(barChart.createBufferedImage(800, 600));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        // Dodawanie obrazka wykresu do panelu
+        ImageIcon chartImageIcon = new ImageIcon(chartImageBytes);
+        JLabel chartLabel = new JLabel(chartImageIcon);
+        ChartPanel chartPanel = new ChartPanel(barChart);
+        chartPanel.setPreferredSize(new Dimension(800, 600));
+        chartPanel.setDomainZoomable(false);
+        chartPanel.setRangeZoomable(false);
+
+        // Tworzenie ramki i dodawanie panelu z wykresem
+        JFrame chartFrame = new JFrame("Death Percentage Chart");
+        chartFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        chartFrame.getContentPane().add(chartPanel, BorderLayout.CENTER);
+        chartFrame.pack();
+        chartFrame.setVisible(true);
     }
 
     public void createDeathCountExcel(HashMap<Integer, Integer> deathCountMap) {
